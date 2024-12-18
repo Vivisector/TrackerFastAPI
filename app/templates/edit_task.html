@@ -8,18 +8,18 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Edit Task: {{ task.title }}</h1>
+        <h1 class="mb-4">{{ task.title }}</h1>
         <form action="{{ url_for('update_task', task_id=task.id) }}" method="post">
             <div class="form-group">
-                <label for="title">Title</label>
+                <label for="title">Название</label>
                 <input type="text" class="form-control" id="title" name="title" value="{{ task.title }}" required>
             </div>
             <div class="form-group">
-                <label for="description">Description</label>
+                <label for="description">Описание</label>
                 <textarea class="form-control" id="description" name="description" rows="3">{{ task.description }}</textarea>
             </div>
             <div class="form-group">
-                <label for="status">Status</label>
+                <label for="status">Статус</label>
                 <select class="form-control" id="status" name="status">
                     <option value="to_do" {% if task.status == 'to_do' %}selected{% endif %}>To Do</option>
                     <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
@@ -27,7 +27,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="progress">Progress</label>
+                <label for="progress">Прогресс</label>
                 <input type="number" class="form-control" id="progress" name="progress" min="0" max="100"
                        value="{{ task.progress }}">
             </div>
