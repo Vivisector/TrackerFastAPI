@@ -85,18 +85,39 @@ def edit_task(task_id: int, request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("edit_task.html", {"request": request, "task": task})
 
 # Обновление задачи
-@app.post("/tasks/{task_id}/edit", name="update_task")
-def update_task_view(
-    task_id: int,
-    title: str = Form(...),
-    description: str = Form(None),
-    status: str = Form(...),
-    progress: int = Form(...),
-    db: Session = Depends(get_db),
+@app.post("/tasks/{task_id}/edit")
+def update_task(
+        task_id: int,
+        title: str = Form(...),
+        description: str = Form(None),
+        status: str = Form(...),
+        progress: int = Form(...),
+        db: Session = Depends(get_db),
 ):
-    task_data = TaskUpdate(title=title, description=description, status=status, progress=progress)
-    update_task(db=db, task_id=task_id, task=task_data)
-    return RedirectResponse(url="/tasks", status_code=303)
+    task = get_task(db=db, task_id=task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Обновляем поля задачи
+    task.title = title
+    task.description = description
+    task.status = status
+
+    # Логика изменения прогресса в зависимости от статуса
+    if status == 'to_do':
+        task.progress = 0  # Если статус To Do, прогресс обнуляется
+    elif status == 'done':
+        task.progress = 100  # Если статус Done, прогресс устанавливается на 100%
+    elif progress < 100:
+        task.progress = progress  # Если статус In Progress, оставить указанный прогресс
+
+    # Если прогресс ниже 100%, статус не может быть Done
+    if task.progress < 100 and status == 'done':
+        task.status = 'in_progress'
+
+    db.commit()
+    return RedirectResponse(url="/", status_code=303)
+
 
 # Завершить задачу
 @app.post("/tasks/{task_id}/complete", name="complete_task")
