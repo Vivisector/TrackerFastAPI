@@ -15,3 +15,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Базовый класс для моделей
 Base = declarative_base()
+
+# Функция для управления временем жизни сессии
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

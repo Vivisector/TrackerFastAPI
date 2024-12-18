@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
-from .models import Base
+from .models import Base, Task
 from .schemas import TaskCreate, TaskUpdate
 from .crud import get_tasks, get_task, create_task, update_task, delete_task
 
@@ -55,15 +55,19 @@ def create_task_form(request: Request):
 # Обработка формы создания задачи
 @app.post("/tasks/new", name="create_task_form_post")
 def create_task_post(
-    title: str = Form(...),
-    description: str = Form(None),
-    status: str = Form("todo"),
-    progress: int = Form(0),
-    db: Session = Depends(get_db)
+        title: str = Form(...),
+        description: str = Form(None),
+        db: Session = Depends(get_db),
 ):
-    task_data = TaskCreate(title=title, description=description, status=status, progress=progress)
-    create_task(db=db, task=task_data)
-    return RedirectResponse(url="/", status_code=303)
+    new_task = Task(
+        title=title,
+        description=description,
+        status="todo",
+    )
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+    return RedirectResponse(url="/tasks", status_code=303)
 
 
 

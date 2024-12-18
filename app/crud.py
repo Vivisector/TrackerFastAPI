@@ -5,8 +5,12 @@ from .schemas import TaskCreate, TaskUpdate
 from datetime import datetime
 
 # Получить все задачи
-def get_tasks(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(Task).offset(skip).limit(limit).all()
+def get_tasks(db: Session, skip: int = 0, limit: int = 0):
+    query = db.query(Task).offset(skip)
+    if limit > 0:
+        query = query.limit(limit)
+    return query.all()
+
 
 
 # Получить задачу по ID
