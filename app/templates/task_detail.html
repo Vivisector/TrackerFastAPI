@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Details</title>
+</head>
+<body>
+    <h1>Task: {{ task.title }}</h1>
+    <p>Description: {{ task.description }}</p>
+    <p>Status: {{ task.status }}</p>
+    <p>Progress: {{ task.progress }}%</p>
+    <p>Created at: {{ task.created_at }}</p>
+    <p>Updated at: {{ task.updated_at }}</p>
+
+    <a href="{{ url_for('edit_task_form', task_id=task.id) }}">Edit Task</a>
+    <form action="{{ url_for('delete_task_view', task_id=task.id) }}" method="post">
+        <button type="submit">Delete Task</button>
+    </form>
+    <a href="{{ url_for('index') }}">Back to Task List</a>
+</body>
+</html>
