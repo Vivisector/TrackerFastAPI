@@ -1,85 +1,83 @@
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from .models import Task
-from .schemas import TaskCreate, TaskUpdate
+from app.models import Task
+from tortoise.exceptions import DoesNotExist
 from datetime import datetime
 
+
 # Получить все задачи
-def get_tasks(db: Session, skip: int = 0, limit: int = 0):
-    query = db.query(Task).offset(skip)
+async def get_tasks(skip: int = 0, limit: int = 0):
+    query = Task.all().offset(skip)
     if limit > 0:
         query = query.limit(limit)
-    return query.all()
-
+    return await query
 
 
 # Получить задачу по ID
-def get_task(db: Session, task_id: int):
-    return db.query(Task).filter(Task.id == task_id).first()
+async def get_task(task_id: int):
+    try:
+        return await Task.get(id=task_id)  # Получаем задачу по id асинхронно
+    except DoesNotExist:
+        return None  # Если задача не найдена, возвращаем None
 
 
 # Фильтр задач по статусу
-def get_tasks_by_status(db: Session, status: str, skip: int = 0, limit: int = 10):
-    return db.query(Task).filter(Task.status == status).offset(skip).limit(limit).all()
+async def get_tasks_by_status(status: str, skip: int = 0, limit: int = 10):
+    return await Task.filter(status=status).offset(skip).limit(limit)
 
 
 # Подсчет всех задач
-def count_tasks(db: Session):
-    return db.query(Task).count()
+async def count_tasks():
+    return await Task.all().count()
 
 
 # Подсчет задач по статусу
-def count_tasks_by_status(db: Session, status: str):
-    return db.query(Task).filter(Task.status == status).count()
+async def count_tasks_by_status(status: str):
+    return await Task.filter(status=status).count()
 
 
-## Создание новой задачи
-def create_task(db: Session, task: TaskCreate):
-    db_task = Task(
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        progress=task.progress
+# Создание новой задачи
+async def create_task(title: str, description: str, status: str, progress: int = 0):
+    task = await Task.create(
+        title=title,
+        description=description,
+        status=status,
+        progress=progress
     )
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    print(f"Created task: {db_task}")  # Выводим информацию о задаче в консоль
-    return db_task
-
+    print(f"Created task: {task}")  # Выводим информацию о задаче в консоль
+    return task
 
 
 # Обновить существующую задачу
-def update_task(db: Session, task_id: int, task: TaskUpdate):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
-    if db_task:
-        db_task.title = task.title
-        db_task.description = task.description
-        db_task.status = task.status
-        db_task.progress = task.progress
+async def update_task(task_id: int, title: str, description: str, status: str, progress: int):
+    task = await Task.filter(id=task_id).first()
+    if not task:
+        return None  # Возврат, если задача не найдена
 
-        # Меняем статус на 'in progress', если прогресс больше 0
-        if db_task.progress > 0 and db_task.status != 'in_progress':
-            db_task.status = 'in_progress'
+    # Обновляем поля задачи
+    task.title = title
+    task.description = description
+    task.status = status
 
-        # Если прогресс 100%, статус меняется на 'done'
-        if db_task.progress == 100:
-            db_task.status = 'done'
+    # Логика изменения прогресса в зависимости от статуса
+    if status == 'to_do':
+        task.progress = 0
+    elif status == 'done':
+        task.progress = 100
+    elif progress < 100:
+        task.progress = progress
 
-        db.commit()
-        db.refresh(db_task)
-    return db_task
+    # Если прогресс ниже 100%, статус не может быть Done
+    if task.progress < 100 and status == 'done':
+        task.status = 'in_progress'
+
+    # Сохраняем изменения
+    await task.save()
+    return task
 
 
 # Удалить задачу
-def delete_task(db: Session, task_id: int):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
-    if not db_task:
-        return None  # Задача не найдена
-    try:
-        db.delete(db_task)
-        db.commit()
-        return db_task
-    except SQLAlchemyError as e:
-        db.rollback()
-        raise e
+async def delete_task(task_id: int):
+    task = await get_task(task_id)
+    if not task:
+        return None  # Если задача не найдена, возвращаем None
+    await task.delete()  # Удаляем задачу асинхронно
+    return task
