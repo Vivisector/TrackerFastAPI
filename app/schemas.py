@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 # Схема для базовой задачи
 class TaskBase(BaseModel):
     title: str
@@ -8,13 +9,16 @@ class TaskBase(BaseModel):
     status: str
     progress: int
 
+
 # Схема для создания задачи (пока ничего не меняется)
 class TaskCreate(TaskBase):
     pass
 
+
 # Схема для обновления задачи (так же может быть без изменений)
 class TaskUpdate(TaskBase):
     pass
+
 
 # Схема для отображения задачи
 class Task(TaskBase):

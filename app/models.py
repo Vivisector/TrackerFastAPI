@@ -3,6 +3,7 @@ from datetime import datetime
 from tortoise import fields
 from tortoise.models import Model
 
+
 class Task(Model):
     id = fields.IntField(pk=True)  # Поле для первичного ключа
     title = fields.CharField(max_length=255, null=False)  # Строка с максимальной длиной

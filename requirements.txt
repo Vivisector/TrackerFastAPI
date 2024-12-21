@@ -1,5 +1,6 @@
 fastapi~=0.115.6
 uvicorn
-sqlalchemy~=2.0.36
 pydantic~=2.10.3
-alembic
+tortoise-orm
+SQLAlchemy~=2.0.36
+pytest~=8.3.4
